@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Top 100</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: #121212;
+            color: #fff;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #000;
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #282828;
+        }
+
+        header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1DB954;
+            letter-spacing: 1px;
+        }
+
+        .spotify-icon {
+            width: 32px;
+            height: 32px;
+            fill: #1DB954;
+        }
+
+        .container {
+            padding: 30px 40px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* Search & Filter Bar */
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .controls input, .controls select {
+            background: #282828;
+            border: 1px solid #404040;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .controls input:focus, .controls select:focus {
+            border-color: #1DB954;
+        }
+
+        .controls input { width: 220px; }
+
+        .controls select option { background: #282828; }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn-green { background: #1DB954; color: #000; }
+        .btn-red { background: #e53935; color: #fff; }
+        .btn-outline { background: transparent; color: #fff; border: 1px solid #404040; }
+        .btn-outline:hover { border-color: #1DB954; color: #1DB954; }
+
+        /* Stats bar */
+        .stats {
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 16px;
+        }
+        .stats span { color: #1DB954; font-weight: 600; }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid #282828;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead {
+            background: #1a1a1a;
+        }
+
+        thead th {
+            padding: 14px 16px;
+            text-align: left;
+            color: #1DB954;
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        thead th:hover { color: #fff; }
+
+        tbody tr {
+            border-top: 1px solid #282828;
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover { background: #1e1e1e; }
+
+        tbody td {
+            padding: 12px 16px;
+            white-space: nowrap;
+            color: #ccc;
+        }
+
+        tbody td:first-child { color: #fff; font-weight: 600; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #282828;
+            color: #1DB954;
+        }
+
+        .action-btns { display: flex; gap: 6px; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 32px;
+            width: 500px;
+            max-width: 95vw;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            color: #1DB954;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full { grid-column: 1 / -1; }
+
+        .form-group label {
+            font-size: 11px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input {
+            background: #282828;
+            border: 1px solid #404040;
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .form-group input:focus { border-color: #1DB954; }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #1DB954;
+            color: #000;
+            font-weight: 600;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            z-index: 200;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { background: #e53935; color: #fff; }
+
+        .empty { text-align: center; padding: 60px; color: #555; font-size: 15px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <svg class="spotify-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+    </svg>
+    <h1>Spotify Top 100</h1>
+</header>
+
+<div class="container">
+
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="Search by title..." oninput="handleSearch()">
+        <input type="text" id="artistInput" placeholder="Filter by artist..." oninput="handleSearch()">
+        <input type="number" id="yearInput" placeholder="Year..." style="width:100px" oninput="handleSearch()">
+        <button class="btn btn-outline" onclick="clearFilters()">Clear</button>
+        <button class="btn btn-green" onclick="openAddModal()" style="margin-left:auto">+ Add Song</button>
+    </div>
+
+    <div class="stats" id="stats">Loading songs...</div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Artist</th>
+                    <th>Genre</th>
+                    <th>Year</th>
+                    <th>BPM</th>
+                    <th>Energy</th>
+                    <th>Danceability</th>
+                    <th>Popularity</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr><td colspan="9" class="empty">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h2 id="modalTitle">Add Song</h2>
+        <div class="form-grid">
+            <div class="form-group full">
+                <label>Title</label>
+                <input type="text" id="f_title" placeholder="Song title">
+            </div>
+            <div class="form-group">
+                <label>Artist</label>
+                <input type="text" id="f_artist" placeholder="Artist name">
+            </div>
+            <div class="form-group">
+                <label>Genre</label>
+                <input type="text" id="f_genre" placeholder="Genre">
+            </div>
+            <div class="form-group">
+                <label>Year</label>
+                <input type="number" id="f_year" placeholder="e.g. 2019">
+            </div>
+            <div class="form-group">
+                <label>BPM</label>
+                <input type="number" id="f_bpm" placeholder="Beats per minute">
+            </div>
+            <div class="form-group">
+                <label>Energy</label>
+                <input type="number" id="f_energy" placeholder="0-100">
+            </div>
+            <div class="form-group">
+                <label>Danceability</label>
+                <input type="number" id="f_dance" placeholder="0-100">
+            </div>
+            <div class="form-group">
+                <label>Loudness (dB)</label>
+                <input type="number" id="f_loud" placeholder="e.g. -5">
+            </div>
+            <div class="form-group">
+                <label>Liveness</label>
+                <input type="number" id="f_live" placeholder="0-100">
+            </div>
+            <div class="form-group">
+                <label>Valence</label>
+                <input type="number" id="f_valence" placeholder="0-100">
+            </div>
+            <div class="form-group">
+                <label>Length (s)</label>
+                <input type="number" id="f_length" placeholder="Duration in seconds">
+            </div>
+            <div class="form-group">
+                <label>Acousticness</label>
+                <input type="number" id="f_acoustic" placeholder="0-100">
+            </div>
+            <div class="form-group">
+                <label>Speechiness</label>
+                <input type="number" id="f_speech" placeholder="0-100">
+            </div>
+            <div class="form-group">
+                <label>Popularity</label>
+                <input type="number" id="f_pop" placeholder="0-100">
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-green" id="modalSubmitBtn" onclick="submitSong()">Add Song</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const API = 'http://localhost:8080/api/spotify';
+    let allSongs = [];
+    let editMode = false;
+
+    async function fetchSongs() {
+        try {
+            const res = await fetch(API);
+            allSongs = await res.json();
+            renderTable(allSongs);
+        } catch (e) {
+            document.getElementById('tableBody').innerHTML =
+                '<tr><td colspan="9" class="empty">Could not connect to backend. Make sure Spring Boot is running.</td></tr>';
+            document.getElementById('stats').textContent = '';
+        }
+    }
+
+    function renderTable(songs) {
+        const tbody = document.getElementById('tableBody');
+        document.getElementById('stats').innerHTML =
+            `Showing <span>${songs.length}</span> song${songs.length !== 1 ? 's' : ''}`;
+
+        if (songs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="empty">No songs found.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = songs.map(s => `
+            <tr>
+                <td>${s.title}</td>
+                <td>${s.artist}</td>
+                <td><span class="badge">${s.top_genre || '-'}</span></td>
+                <td>${s.year}</td>
+                <td>${s.beats_per_minute}</td>
+                <td>${s.energy}</td>
+                <td>${s.danceability}</td>
+                <td>${s.popularity}</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn btn-outline" style="padding:6px 12px;font-size:12px" onclick='openEditModal(${JSON.stringify(s)})'>Edit</button>
+                        <button class="btn btn-red" style="padding:6px 12px;font-size:12px" onclick="deleteSong('${s.title.replace(/'/g, "\\'")}')">Delete</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function handleSearch() {
+        const title = document.getElementById('searchInput').value.toLowerCase();
+        const artist = document.getElementById('artistInput').value.toLowerCase();
+        const year = document.getElementById('yearInput').value;
+
+        let filtered = allSongs;
+        if (title) filtered = filtered.filter(s => s.title.toLowerCase().includes(title));
+        if (artist) filtered = filtered.filter(s => s.artist.toLowerCase().includes(artist));
+        if (year) filtered = filtered.filter(s => s.year == year);
+        renderTable(filtered);
+    }
+
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('artistInput').value = '';
+        document.getElementById('yearInput').value = '';
+        renderTable(allSongs);
+    }
+
+    function getFormData() {
+        return {
+            title: document.getElementById('f_title').value,
+            artist: document.getElementById('f_artist').value,
+            top_genre: document.getElementById('f_genre').value,
+            year: parseInt(document.getElementById('f_year').value) || null,
+            beats_per_minute: parseInt(document.getElementById('f_bpm').value) || null,
+            energy: parseInt(document.getElementById('f_energy').value) || null,
+            danceability: parseInt(document.getElementById('f_dance').value) || null,
+            loudness_db: parseInt(document.getElementById('f_loud').value) || null,
+            liveness: parseInt(document.getElementById('f_live').value) || null,
+            valance: parseInt(document.getElementById('f_valence').value) || null,
+            length: parseInt(document.getElementById('f_length').value) || null,
+            acousticness: parseInt(document.getElementById('f_acoustic').value) || null,
+            speechiness: parseInt(document.getElementById('f_speech').value) || null,
+            popularity: parseInt(document.getElementById('f_pop').value) || null
+        };
+    }
+
+    function openAddModal() {
+        editMode = false;
+        document.getElementById('modalTitle').textContent = 'Add Song';
+        document.getElementById('modalSubmitBtn').textContent = 'Add Song';
+        document.getElementById('f_title').disabled = false;
+        ['title','artist','genre','year','bpm','energy','dance','loud','live','valence','length','acoustic','speech','pop']
+            .forEach(id => document.getElementById('f_' + id).value = '');
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function openEditModal(song) {
+        editMode = true;
+        document.getElementById('modalTitle').textContent = 'Edit Song';
+        document.getElementById('modalSubmitBtn').textContent = 'Save Changes';
+        document.getElementById('f_title').value = song.title;
+        document.getElementById('f_title').disabled = true;
+        document.getElementById('f_artist').value = song.artist || '';
+        document.getElementById('f_genre').value = song.top_genre || '';
+        document.getElementById('f_year').value = song.year || '';
+        document.getElementById('f_bpm').value = song.beats_per_minute || '';
+        document.getElementById('f_energy').value = song.energy || '';
+        document.getElementById('f_dance').value = song.danceability || '';
+        document.getElementById('f_loud').value = song.loudness_db || '';
+        document.getElementById('f_live').value = song.liveness || '';
+        document.getElementById('f_valence').value = song.valance || '';
+        document.getElementById('f_length').value = song.length || '';
+        document.getElementById('f_acoustic').value = song.acousticness || '';
+        document.getElementById('f_speech').value = song.speechiness || '';
+        document.getElementById('f_pop').value = song.popularity || '';
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    async function submitSong() {
+        const data = getFormData();
+        if (!data.title) { showToast('Title is required', true); return; }
+
+        const method = editMode ? 'PUT' : 'POST';
+        try {
+            const res = await fetch(API, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (res.ok) {
+                showToast(editMode ? 'Song updated!' : 'Song added!');
+                closeModal();
+                fetchSongs();
+            } else {
+                showToast('Something went wrong', true);
+            }
+        } catch (e) {
+            showToast('Could not connect to backend', true);
+        }
+    }
+
+    async function deleteSong(title) {
+        if (!confirm(`Delete "${title}"?`)) return;
+        try {
+            const res = await fetch(`${API}/${encodeURIComponent(title)}`, { method: 'DELETE' });
+            if (res.ok) {
+                showToast('Song deleted');
+                fetchSongs();
+            } else {
+                showToast('Could not delete song', true);
+            }
+        } catch (e) {
+            showToast('Could not connect to backend', true);
+        }
+    }
+
+    function showToast(msg, isError = false) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast' + (isError ? ' error' : '');
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // Close modal on overlay click
+    document.getElementById('modalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    fetchSongs();
+</script>
+</body>
+</html>
