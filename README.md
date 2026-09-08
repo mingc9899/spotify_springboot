@@ -1,6 +1,6 @@
 # Spotify Top 100 Songs API
 
-A RESTful CRUD API built with Spring Boot that manages a database of the top 100 streamed Spotify songs. Supports filtering by title, artist, and year, as well as ranking songs by popularity.
+A full-stack CRUD application built with Spring Boot and vanilla JavaScript that manages a database of the top 100 streamed Spotify songs. Features a Spotify-themed frontend with search/filter, and a REST API supporting filtering by title, artist, and year as well as ranking songs by popularity.
 
 ---
 
@@ -11,6 +11,7 @@ A RESTful CRUD API built with Spring Boot that manages a database of the top 100
 - Spring Data JPA
 - PostgreSQL
 - Maven
+- HTML/CSS/JavaScript (Frontend)
 
 ---
 
@@ -49,64 +50,21 @@ spring.jpa.properties.hibernate.format_sql=true
 mvn spring-boot:run
 ```
 
-The API will be available at `http://localhost:8080`
+The app will be available at `http://localhost:8080`
 
 ---
 
-## API Endpoints
+## Frontend
 
-### Get Songs
+Open `http://localhost:8080/index.html` in your browser after starting the app.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/spotify` | Get all songs |
-| GET | `/api/spotify?title={title}` | Search songs by title |
-| GET | `/api/spotify?artist={artist}` | Get songs by artist |
-| GET | `/api/spotify?year={year}` | Get songs by year |
-| GET | `/api/spotify/rank?rank={rank}` | Get song by popularity rank (1-100) |
-
-### Manage Songs
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/spotify` | Add a new song |
-| PUT | `/api/spotify` | Update an existing song |
-| DELETE | `/api/spotify/{title}` | Delete a song by title |
-
-### Example Request Body (POST/PUT)
-
-```json
-{
-    "title": "Song Title",
-    "artist": "Artist Name",
-    "top_genre": "pop",
-    "year": 2019,
-    "beats_per_minute": 120,
-    "energy": 80,
-    "danceability": 75,
-    "loudness_db": -5,
-    "liveness": 10,
-    "valence": 60,
-    "length": 200,
-    "acousticness": 15,
-    "speechiness": 5,
-    "popularity": 90
-}
-```
+Features:
+- View all 100 songs in a table
+- Search and filter by title, artist, and year
+- Add, edit, and delete songs via modal forms
+- Spotify-themed dark UI
 
 ---
 
-## Project Structure
 
-```
-src/
-└── main/
-    ├── java/spotify/
-    │   ├── Spotify.java              # Entity
-    │   ├── SpotifyController.java    # REST Controller
-    │   ├── SpotifyService.java       # Business Logic
-    │   └── SpotifyRepository.java    # Data Access
-    └── resources/
-        ├── application.example.properties
-        └── schema.sql
-```
+
